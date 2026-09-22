@@ -1,0 +1,150 @@
+.page {
+  min-height: 100vh;
+  padding: 24px;
+  display: grid;
+  place-items: center;
+}
+
+.chatShell {
+  width: min(1180px, 100%);
+  min-height: min(760px, calc(100vh - 48px));
+  display: grid;
+  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid #e2e7ef;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgb(37 52 75 / 10%);
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #e7ebf1;
+  background: #ffffff;
+}
+
+.sidebarHeader {
+  min-height: 88px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid #edf0f4;
+}
+
+.eyebrow {
+  margin: 0 0 4px;
+  color: #778196;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  color: #18202e;
+  font-size: 24px;
+  line-height: 1.15;
+}
+
+.newChatButton {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 10px;
+  color: #8992a3;
+  background: #edf0f5;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.sidebarEmpty,
+.conversationEmpty {
+  margin: auto;
+  padding: 32px;
+  text-align: center;
+}
+
+.emptyIcon,
+.logoMark {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 16px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  color: #275efe;
+  background: #e9efff;
+  font-size: 24px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.emptyIcon {
+  position: relative;
+}
+
+.emptyIcon::after {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  content: '+';
+  line-height: 1;
+  transform: translateY(-3px);
+}
+
+.emptyTitle {
+  margin: 0 0 8px;
+  color: #30394a;
+  font-weight: 650;
+}
+
+.emptyText,
+.conversationEmpty p {
+  max-width: 360px;
+  margin: 0 auto;
+  color: #7b8495;
+  line-height: 1.55;
+}
+
+.conversation {
+  display: grid;
+  min-width: 0;
+  background:
+    radial-gradient(circle at 20% 20%, rgb(221 230 255 / 55%), transparent 32%),
+    linear-gradient(145deg, #f7f9fc, #eef3fa);
+}
+
+.conversationEmpty h2 {
+  margin: 0 0 10px;
+  color: #1a2230;
+  font-size: 24px;
+}
+
+.logoMark {
+  color: #ffffff;
+  background: #275efe;
+  box-shadow: 0 10px 26px rgb(39 94 254 / 24%);
+}
+
+@media (max-width: 720px) {
+  .page {
+    padding: 0;
+  }
+
+  .chatShell {
+    min-height: 100vh;
+    grid-template-columns: 1fr;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .sidebar {
+    display: none;
+  }
+}
