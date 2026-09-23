@@ -50,16 +50,33 @@
   line-height: 1.15;
 }
 
-.newChatButton {
+.changeInstanceButton,
+.connectionStatus {
   min-height: 38px;
   padding: 0 14px;
-  border: 0;
   border-radius: 10px;
-  color: #8992a3;
-  background: #edf0f5;
-  font: inherit;
   font-size: 14px;
   font-weight: 600;
+}
+
+.connectionStatus {
+  display: inline-flex;
+  align-items: center;
+  color: #8992a3;
+  background: #edf0f5;
+}
+
+.changeInstanceButton {
+  border: 1px solid #d8deea;
+  color: #4c5b70;
+  background: #ffffff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.changeInstanceButton:hover {
+  border-color: #b9c4d5;
+  background: #f7f9fc;
 }
 
 .sidebarEmpty,
