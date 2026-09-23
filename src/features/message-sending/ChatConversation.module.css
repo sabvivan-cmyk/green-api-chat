@@ -46,8 +46,10 @@
   place-items: center;
   border-radius: 50%;
   color: #ffffff;
-  background: linear-gradient(145deg, #4b87ff, #2860eb);
-  box-shadow: 0 5px 13px rgb(45 103 246 / 18%);
+  background:
+    radial-gradient(circle at 30% 24%, rgb(255 255 255 / 38%), transparent 28%),
+    linear-gradient(145deg, #25a7ff 0%, #5547ed 45%, #a735e8 72%, #f052a4 100%);
+  box-shadow: 0 6px 16px rgb(104 66 225 / 24%);
   font-size: 16px;
   font-weight: 700;
 }
@@ -282,14 +284,16 @@
   font-size: 10px;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 767px) {
   .header {
     min-height: 68px;
-    padding: 10px 13px;
+    padding: 10px 12px 10px 8px;
     gap: 9px;
   }
 
   .backButton {
+    width: 44px;
+    height: 44px;
     display: grid;
   }
 
@@ -300,6 +304,7 @@
 
   .messages {
     padding: 16px 12px 10px;
+    scrollbar-gutter: auto;
   }
 
   .outgoingMessage,
@@ -311,14 +316,42 @@
     padding: 8px 10px 10px;
   }
 
+  .composer textarea {
+    font-size: 16px;
+  }
+
+  .composerRow button {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
   .keyboardHint {
     margin-left: 12px;
   }
 }
 
 @media (max-width: 420px) {
+  .header {
+    gap: 7px;
+  }
+
+  .headerAvatar {
+    width: 38px;
+    height: 38px;
+  }
+
+  .contactInfo h2 {
+    font-size: 15px;
+  }
+
   .messageMeta {
     white-space: normal;
+  }
+
+  .keyboardHint {
+    display: none;
   }
 }
 
