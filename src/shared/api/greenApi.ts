@@ -20,6 +20,14 @@ interface GetStateInstanceResponse {
   stateInstance: InstanceState
 }
 
+export interface CheckWhatsappResponse {
+  existsWhatsapp: boolean
+  chatId?: string
+  username?: string
+  phoneNumber?: string
+  fromCache?: boolean
+}
+
 const REQUEST_TIMEOUT_MS = 15_000
 
 export function normalizeApiUrl(value: string) {
@@ -90,6 +98,30 @@ export async function getStateInstance(
   return response.data.stateInstance
 }
 
+export async function checkWhatsapp(
+  credentials: InstanceCredentials,
+  phoneNumber: string,
+): Promise<CheckWhatsappResponse> {
+  const normalizedCredentials = normalizeCredentials(credentials)
+  const { apiUrl, idInstance, apiTokenInstance } = normalizedCredentials
+  const requestUrl = `${apiUrl}/waInstance${encodeURIComponent(idInstance)}/checkWhatsapp/${encodeURIComponent(apiTokenInstance)}`
+
+  const response = await axios.post<CheckWhatsappResponse>(
+    requestUrl,
+    { chatId: phoneNumber },
+    { timeout: REQUEST_TIMEOUT_MS },
+  )
+
+  if (
+    typeof response.data?.existsWhatsapp !== 'boolean' ||
+    (response.data.existsWhatsapp && !response.data.chatId)
+  ) {
+    throw new Error('GREEN-API вернул некорректные данные контакта.')
+  }
+
+  return response.data
+}
+
 export function getConnectionErrorMessage(error: unknown) {
   if (error instanceof Error && !axios.isAxiosError(error)) {
     return error.message
@@ -106,4 +138,26 @@ export function getConnectionErrorMessage(error: unknown) {
   }
 
   return 'Не удалось проверить состояние инстанса. Попробуйте ещё раз.'
+}
+
+export function getCheckWhatsappErrorMessage(error: unknown) {
+  if (error instanceof Error && !axios.isAxiosError(error)) {
+    return error.message
+  }
+
+  if (axios.isAxiosError(error)) {
+    if (!error.response) {
+      return 'Не удалось связаться с GREEN-API. Проверьте подключение и повторите попытку.'
+    }
+
+    if (error.response.status === 401 || error.response.status === 403) {
+      return 'GREEN-API отклонил данные доступа. Переподключите инстанс.'
+    }
+
+    if (error.response.status === 429) {
+      return 'Превышен лимит запросов. Подождите и попробуйте снова.'
+    }
+  }
+
+  return 'Не удалось проверить номер в WhatsApp. Попробуйте ещё раз.'
 }
