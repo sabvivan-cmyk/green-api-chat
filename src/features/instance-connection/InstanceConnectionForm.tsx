@@ -5,6 +5,7 @@ import {
   getStateInstance,
   InstanceCredentials,
   InstanceState,
+  isGreenApiMockEnabled,
   normalizeCredentials,
 } from '../../shared/api/greenApi'
 import styles from './InstanceConnectionForm.module.css'
@@ -37,9 +38,15 @@ function getStateMessage(state: InstanceState) {
 export function InstanceConnectionForm({
   onConnected,
 }: InstanceConnectionFormProps) {
-  const [apiUrl, setApiUrl] = useState('')
-  const [idInstance, setIdInstance] = useState('')
-  const [apiTokenInstance, setApiTokenInstance] = useState('')
+  const [apiUrl, setApiUrl] = useState(
+    isGreenApiMockEnabled ? 'https://mock.green-api.local' : '',
+  )
+  const [idInstance, setIdInstance] = useState(
+    isGreenApiMockEnabled ? '1' : '',
+  )
+  const [apiTokenInstance, setApiTokenInstance] = useState(
+    isGreenApiMockEnabled ? 'mock-token' : '',
+  )
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -72,11 +79,16 @@ export function InstanceConnectionForm({
   return (
     <div className={styles.card}>
       <div className={styles.heading}>
-        <p className={styles.eyebrow}>Подключение</p>
-        <h2>Подключите WhatsApp</h2>
+        <p className={styles.eyebrow}>
+          {isGreenApiMockEnabled ? 'Локальный mock' : 'Подключение'}
+        </p>
+        <h2>
+          {isGreenApiMockEnabled ? 'Запустите демо-чат' : 'Подключите WhatsApp'}
+        </h2>
         <p>
-          Введите данные инстанса из личного кабинета GREEN-API. Они останутся
-          только в памяти этой вкладки.
+          {isGreenApiMockEnabled
+            ? 'Сетевые запросы отключены. Отправленные сообщения получат автоматический эхо-ответ.'
+            : 'Введите данные инстанса из личного кабинета GREEN-API. Они останутся только в памяти этой вкладки.'}
         </p>
       </div>
 
@@ -133,7 +145,9 @@ export function InstanceConnectionForm({
       </form>
 
       <p className={styles.hint}>
-        Перед подключением авторизуйте WhatsApp по QR-коду в личном кабинете.
+        {isGreenApiMockEnabled
+          ? 'Нажмите «Подключиться», затем создайте чат с любым международным номером.'
+          : 'Перед подключением авторизуйте WhatsApp по QR-коду в личном кабинете.'}
       </p>
     </div>
   )

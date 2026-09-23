@@ -1,5 +1,16 @@
 import axios from 'axios'
 
+import {
+  mockCheckWhatsapp,
+  mockDeleteNotification,
+  mockGetStateInstance,
+  mockReceiveNotification,
+  mockSendTextMessage,
+} from './mockGreenApi'
+
+export const isGreenApiMockEnabled =
+  import.meta.env.MODE === 'mock'
+
 export interface InstanceCredentials {
   apiUrl: string
   idInstance: string
@@ -104,6 +115,11 @@ export async function getStateInstance(
   credentials: InstanceCredentials,
 ): Promise<InstanceState> {
   const normalizedCredentials = normalizeCredentials(credentials)
+
+  if (isGreenApiMockEnabled) {
+    return mockGetStateInstance()
+  }
+
   const { apiUrl, idInstance, apiTokenInstance } = normalizedCredentials
   const requestUrl = `${apiUrl}/waInstance${encodeURIComponent(idInstance)}/getStateInstance/${encodeURIComponent(apiTokenInstance)}`
 
@@ -127,6 +143,11 @@ export async function checkWhatsapp(
   phoneNumber: string,
 ): Promise<CheckWhatsappResponse> {
   const normalizedCredentials = normalizeCredentials(credentials)
+
+  if (isGreenApiMockEnabled) {
+    return mockCheckWhatsapp(phoneNumber)
+  }
+
   const { apiUrl, idInstance, apiTokenInstance } = normalizedCredentials
   const requestUrl = `${apiUrl}/waInstance${encodeURIComponent(idInstance)}/checkWhatsapp/${encodeURIComponent(apiTokenInstance)}`
 
@@ -166,6 +187,10 @@ export async function sendTextMessage(
     throw new Error('Сообщение не должно превышать 20 000 символов.')
   }
 
+  if (isGreenApiMockEnabled) {
+    return mockSendTextMessage(normalizedChatId, message)
+  }
+
   const { apiUrl, idInstance, apiTokenInstance } = normalizedCredentials
   const requestUrl = `${apiUrl}/waInstance${encodeURIComponent(idInstance)}/sendMessage/${encodeURIComponent(apiTokenInstance)}`
   const response = await axios.post<SendMessageResponse>(
@@ -186,6 +211,11 @@ export async function receiveNotification(
   signal?: AbortSignal,
 ): Promise<NotificationEnvelope | null> {
   const normalizedCredentials = normalizeCredentials(credentials)
+
+  if (isGreenApiMockEnabled) {
+    return mockReceiveNotification(signal)
+  }
+
   const { apiUrl, idInstance, apiTokenInstance } = normalizedCredentials
   const requestUrl = `${apiUrl}/waInstance${encodeURIComponent(idInstance)}/receiveNotification/${encodeURIComponent(apiTokenInstance)}`
   const response = await axios.get<
@@ -225,6 +255,12 @@ export async function deleteNotification(
   signal?: AbortSignal,
 ) {
   const normalizedCredentials = normalizeCredentials(credentials)
+
+  if (isGreenApiMockEnabled) {
+    mockDeleteNotification(receiptId)
+    return
+  }
+
   const { apiUrl, idInstance, apiTokenInstance } = normalizedCredentials
   const requestUrl = `${apiUrl}/waInstance${encodeURIComponent(idInstance)}/deleteNotification/${encodeURIComponent(apiTokenInstance)}/${receiptId}`
   const response = await axios.delete<DeleteNotificationResponse>(requestUrl, {
