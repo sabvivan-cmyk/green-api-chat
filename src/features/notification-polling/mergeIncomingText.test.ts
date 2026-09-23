@@ -23,6 +23,11 @@ describe('mergeIncomingText', () => {
 
     expect(result).toHaveLength(1)
     expect(result[0].chatId).toBe('123456789012345@lid')
+    expect(result[0].knownChatIds).toEqual([
+      '123456789012345@lid',
+      '79001234567@c.us',
+    ])
+    expect(result[0].title).toBe('Иван')
     expect(result[0].messages).toEqual([
       expect.objectContaining({ id: 'incoming-message-id', text: 'Ответ' }),
     ])
@@ -36,7 +41,7 @@ describe('mergeIncomingText', () => {
     expect(twice[0].messages).toHaveLength(1)
   })
 
-  it('prefers an exact chatId match over a phone alias', () => {
+  it('consolidates existing exact and phone-alias chats', () => {
     const exactChat: Chat = {
       ...existingChat,
       chatId: '79001234567@c.us',
@@ -47,8 +52,13 @@ describe('mergeIncomingText', () => {
       incomingNotification,
     )
 
-    expect(result[0].messages).toEqual([])
-    expect(result[1].messages).toHaveLength(1)
+    expect(result).toHaveLength(1)
+    expect(result[0].chatId).toBe('123456789012345@lid')
+    expect(result[0].knownChatIds).toEqual([
+      '123456789012345@lid',
+      '79001234567@c.us',
+    ])
+    expect(result[0].messages).toHaveLength(1)
   })
 
   it('does not match different phone numbers', () => {

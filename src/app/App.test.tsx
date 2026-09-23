@@ -288,4 +288,153 @@ describe('App', () => {
       ),
     ).toBeInTheDocument()
   })
+
+  it('opens the existing incoming chat when the same phone is entered manually', async () => {
+    const user = userEvent.setup()
+    mockedAxios.get
+      .mockResolvedValueOnce({ data: { stateInstance: 'authorized' } })
+      .mockResolvedValueOnce({
+        data: {
+          receiptId: 101,
+          body: {
+            typeWebhook: 'incomingMessageReceived',
+            instanceData: { typeInstance: 'whatsapp' },
+            timestamp: 1_588_091_580,
+            idMessage: 'incoming-before-manual',
+            senderData: {
+              chatId: '79991234567@c.us',
+              sender: '79991234567@c.us',
+              senderName: 'Иван',
+            },
+            messageData: {
+              typeMessage: 'textMessage',
+              textMessageData: { textMessage: 'Первое входящее' },
+            },
+          },
+        },
+      })
+    mockedAxios.delete.mockResolvedValueOnce({ data: { result: true } })
+    render(<App />)
+
+    await user.type(
+      screen.getByRole('textbox', { name: 'API URL' }),
+      'https://7103.api.greenapi.com',
+    )
+    await user.type(
+      screen.getByRole('textbox', { name: 'ID инстанса' }),
+      '1101000001',
+    )
+    await user.type(screen.getByLabelText('API-токен инстанса'), 'token')
+    await user.click(screen.getByRole('button', { name: 'Подключиться' }))
+
+    expect(
+      await screen.findByRole('heading', { name: 'Иван' }),
+    ).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Новый чат' }))
+    await user.type(
+      screen.getByRole('textbox', { name: 'Номер телефона' }),
+      '+7 999 123-45-67',
+    )
+    await user.click(screen.getByRole('button', { name: 'Создать чат' }))
+
+    expect(screen.getByRole('heading', { name: 'Иван' })).toBeInTheDocument()
+    expect(
+      within(screen.getByRole('navigation', { name: 'Список чатов' }))
+        .getAllByRole('button'),
+    ).toHaveLength(1)
+    expect(mockedAxios.post).not.toHaveBeenCalled()
+  })
+
+  it('routes an incoming c.us message into a manually created lid chat', async () => {
+    const user = userEvent.setup()
+    const incomingResponse = createDeferred<{
+      data: {
+        receiptId: number
+        body: Record<string, unknown>
+      }
+    }>()
+    mockedAxios.get
+      .mockResolvedValueOnce({ data: { stateInstance: 'authorized' } })
+      .mockImplementationOnce(() => incomingResponse.promise)
+    mockedAxios.post
+      .mockResolvedValueOnce({
+        data: {
+          existsWhatsapp: true,
+          chatId: '123456789012345@lid',
+          username: '',
+          phoneNumber: '79991234567@c.us',
+          fromCache: true,
+        },
+      })
+      .mockResolvedValueOnce({ data: { idMessage: 'outgoing-after-merge' } })
+    mockedAxios.delete.mockResolvedValueOnce({ data: { result: true } })
+    render(<App />)
+
+    await user.type(
+      screen.getByRole('textbox', { name: 'API URL' }),
+      'https://7103.api.greenapi.com',
+    )
+    await user.type(
+      screen.getByRole('textbox', { name: 'ID инстанса' }),
+      '1101000001',
+    )
+    await user.type(screen.getByLabelText('API-токен инстанса'), 'token')
+    await user.click(screen.getByRole('button', { name: 'Подключиться' }))
+    await user.click(
+      await screen.findByRole('button', { name: 'Новый чат' }),
+    )
+    await user.type(
+      screen.getByRole('textbox', { name: 'Номер телефона' }),
+      '+7 999 123-45-67',
+    )
+    await user.click(screen.getByRole('button', { name: 'Создать чат' }))
+
+    await act(async () =>
+      incomingResponse.resolve({
+        data: {
+          receiptId: 102,
+          body: {
+            typeWebhook: 'incomingMessageReceived',
+            instanceData: { typeInstance: 'whatsapp' },
+            timestamp: 1_588_091_581,
+            idMessage: 'incoming-after-manual',
+            senderData: {
+              chatId: '79991234567@c.us',
+              sender: '79991234567@c.us',
+              senderName: 'Иван',
+            },
+            messageData: {
+              typeMessage: 'textMessage',
+              textMessageData: { textMessage: 'Ответ после создания' },
+            },
+          },
+        },
+      }),
+    )
+
+    expect(
+      await screen.findByRole('heading', { name: 'Иван' }),
+    ).toBeInTheDocument()
+    expect(
+      within(screen.getByRole('navigation', { name: 'Список чатов' }))
+        .getAllByRole('button'),
+    ).toHaveLength(1)
+    expect(
+      within(screen.getByLabelText('Активный чат')).getByText(
+        'Ответ после создания',
+      ),
+    ).toBeInTheDocument()
+
+    await user.type(
+      screen.getByRole('textbox', { name: 'Сообщение' }),
+      'Продолжаем',
+    )
+    await user.click(screen.getByRole('button', { name: 'Отправить' }))
+
+    expect(mockedAxios.post).toHaveBeenLastCalledWith(
+      expect.stringContaining('/sendMessage/'),
+      { chatId: '123456789012345@lid', message: 'Продолжаем' },
+      { timeout: 15_000 },
+    )
+  })
 })

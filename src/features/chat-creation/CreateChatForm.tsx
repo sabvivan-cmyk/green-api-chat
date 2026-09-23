@@ -18,12 +18,14 @@ interface CreateChatFormProps {
   credentials: InstanceCredentials
   onCancel: () => void
   onCreated: (chat: CreatedChat) => void
+  onExistingChatRequested?: (phoneNumber: string) => boolean
 }
 
 export function CreateChatForm({
   credentials,
   onCancel,
   onCreated,
+  onExistingChatRequested,
 }: CreateChatFormProps) {
   const [phoneNumber, setPhoneNumber] = useState('')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -36,6 +38,11 @@ export function CreateChatForm({
 
     try {
       const normalizedPhoneNumber = normalizePhoneNumber(phoneNumber)
+
+      if (onExistingChatRequested?.(normalizedPhoneNumber)) {
+        return
+      }
+
       const result = await checkWhatsapp(credentials, normalizedPhoneNumber)
 
       if (!result.existsWhatsapp || !result.chatId) {

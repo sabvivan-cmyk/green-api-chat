@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 
 import { Chat, ChatMessage } from '../entities/chat/model'
+import { mergeContactChat } from '../entities/chat/contactState'
 import { appendMessageToChat } from '../entities/chat/messageState'
 import {
   CreatedChat,
@@ -81,18 +82,37 @@ export function App() {
   }
 
   function handleChatCreated(chat: CreatedChat) {
-    setChats((currentChats) => {
-      const chatAlreadyExists = currentChats.some(
-        (currentChat) => currentChat.chatId === chat.chatId,
-      )
-
-      return chatAlreadyExists
-        ? currentChats
-        : [...currentChats, { ...chat, messages: [] }]
-    })
+    setChats(
+      (currentChats) =>
+        mergeContactChat(
+          currentChats,
+          { ...chat, knownChatIds: [chat.chatId], messages: [] },
+          { preferredChatId: chat.chatId },
+        ).chats,
+    )
     setActiveChatId(chat.chatId)
     setIsCreatingChat(false)
     setIsMobileConversationOpen(true)
+  }
+
+  function handleExistingChatRequested(phoneNumber: string) {
+    const existingChat = chats.find(
+      (chat) => chat.phoneNumber === phoneNumber,
+    )
+
+    if (!existingChat) {
+      return false
+    }
+
+    const result = mergeContactChat(chats, {
+      ...existingChat,
+      knownChatIds: existingChat.knownChatIds ?? [existingChat.chatId],
+    })
+    setChats(result.chats)
+    setActiveChatId(result.chat.chatId)
+    setIsCreatingChat(false)
+    setIsMobileConversationOpen(true)
+    return true
   }
 
   function handleMessageAccepted(chatId: string, message: ChatMessage) {
@@ -241,6 +261,7 @@ export function App() {
                 setIsMobileConversationOpen(false)
               }}
               onCreated={handleChatCreated}
+              onExistingChatRequested={handleExistingChatRequested}
             />
           ) : activeChat ? (
             <ChatConversation
