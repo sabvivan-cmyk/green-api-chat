@@ -65,6 +65,9 @@ describe('App', () => {
         fromCache: true,
       },
     })
+    mockedAxios.post.mockResolvedValueOnce({
+      data: { idMessage: '3EB0C767D097B7C7C030' },
+    })
     render(<App />)
 
     await user.type(
@@ -92,6 +95,20 @@ describe('App', () => {
     expect(mockedAxios.post).toHaveBeenCalledWith(
       expect.stringContaining('/checkWhatsapp/'),
       { chatId: '79991234567' },
+      { timeout: 15_000 },
+    )
+
+    await user.type(
+      screen.getByRole('textbox', { name: 'Сообщение' }),
+      'Привет!',
+    )
+    await user.click(screen.getByRole('button', { name: 'Отправить' }))
+
+    expect(await screen.findByText('Привет!')).toBeInTheDocument()
+    expect(screen.getByText(/Принято API/)).toBeInTheDocument()
+    expect(mockedAxios.post).toHaveBeenLastCalledWith(
+      expect.stringContaining('/sendMessage/'),
+      { chatId: '123456789012345@lid', message: 'Привет!' },
       { timeout: 15_000 },
     )
   })

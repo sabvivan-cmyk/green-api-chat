@@ -1,10 +1,12 @@
 import { useState } from 'react'
 
+import { Chat, ChatMessage } from '../entities/chat/model'
 import {
   CreatedChat,
   CreateChatForm,
 } from '../features/chat-creation/CreateChatForm'
 import { InstanceConnectionForm } from '../features/instance-connection/InstanceConnectionForm'
+import { ChatConversation } from '../features/message-sending/ChatConversation'
 import { InstanceCredentials } from '../shared/api/greenApi'
 import styles from './App.module.css'
 
@@ -12,7 +14,7 @@ export function App() {
   const [credentials, setCredentials] = useState<InstanceCredentials | null>(
     null,
   )
-  const [chats, setChats] = useState<CreatedChat[]>([])
+  const [chats, setChats] = useState<Chat[]>([])
   const [activeChatId, setActiveChatId] = useState<string | null>(null)
   const [isCreatingChat, setIsCreatingChat] = useState(false)
 
@@ -31,10 +33,30 @@ export function App() {
         (currentChat) => currentChat.chatId === chat.chatId,
       )
 
-      return chatAlreadyExists ? currentChats : [...currentChats, chat]
+      return chatAlreadyExists
+        ? currentChats
+        : [...currentChats, { ...chat, messages: [] }]
     })
     setActiveChatId(chat.chatId)
     setIsCreatingChat(false)
+  }
+
+  function handleMessageAccepted(chatId: string, message: ChatMessage) {
+    setChats((currentChats) =>
+      currentChats.map((chat) => {
+        if (chat.chatId !== chatId) {
+          return chat
+        }
+
+        const messageAlreadyExists = chat.messages.some(
+          (currentMessage) => currentMessage.id === message.id,
+        )
+
+        return messageAlreadyExists
+          ? chat
+          : { ...chat, messages: [...chat.messages, message] }
+      }),
+    )
   }
 
   return (
@@ -114,24 +136,13 @@ export function App() {
               onCreated={handleChatCreated}
             />
           ) : activeChat ? (
-            <div className={styles.activeConversation}>
-              <header className={styles.conversationHeader}>
-                <div>
-                  <h2>{activeChat.title}</h2>
-                  <p>+{activeChat.phoneNumber}</p>
-                </div>
-                <button onClick={() => setIsCreatingChat(true)} type="button">
-                  Новый чат
-                </button>
-              </header>
-              <div className={styles.conversationEmpty}>
-                <div className={styles.logoMark} aria-hidden="true">
-                  {activeChat.title.slice(0, 1).toUpperCase()}
-                </div>
-                <h2>Чат создан</h2>
-                <p>Отправка сообщений будет добавлена в следующей фиче.</p>
-              </div>
-            </div>
+            <ChatConversation
+              chat={activeChat}
+              credentials={credentials}
+              key={activeChat.chatId}
+              onMessageAccepted={handleMessageAccepted}
+              onNewChat={() => setIsCreatingChat(true)}
+            />
           ) : (
             <div className={styles.conversationEmpty}>
               <div className={styles.logoMark} aria-hidden="true">

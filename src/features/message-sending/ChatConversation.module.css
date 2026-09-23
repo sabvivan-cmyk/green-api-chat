@@ -1,0 +1,168 @@
+.conversation {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+.header {
+  min-height: 72px;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid #e1e7f0;
+  background: rgb(255 255 255 / 82%);
+}
+
+.header h2,
+.header p {
+  margin: 0;
+}
+
+.header h2 {
+  color: #1a2230;
+  font-size: 17px;
+}
+
+.header p {
+  margin-top: 4px;
+  color: #7b8495;
+  font-size: 13px;
+}
+
+.header button {
+  padding: 7px 10px;
+  border: 1px solid #d8deea;
+  border-radius: 8px;
+  color: #4c5b70;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.messages {
+  min-height: 0;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+}
+
+.outgoingMessage {
+  max-width: min(72%, 560px);
+  margin-left: auto;
+  padding: 10px 13px 7px;
+  border-radius: 16px 16px 4px;
+  color: #172033;
+  background: #dfe8ff;
+  box-shadow: 0 5px 15px rgb(51 78 139 / 8%);
+}
+
+.outgoingMessage p {
+  margin: 0;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.outgoingMessage span {
+  margin-top: 4px;
+  display: block;
+  color: #667594;
+  font-size: 11px;
+  text-align: right;
+}
+
+.emptyMessages {
+  margin: auto;
+  display: grid;
+  gap: 6px;
+  color: #536176;
+  text-align: center;
+}
+
+.emptyMessages span {
+  color: #7b8495;
+  font-size: 14px;
+}
+
+.composer {
+  padding: 12px 16px 14px;
+  border-top: 1px solid #e1e7f0;
+  background: rgb(255 255 255 / 90%);
+}
+
+.composerRow {
+  display: flex;
+  align-items: end;
+  gap: 10px;
+}
+
+.composer textarea {
+  min-height: 44px;
+  max-height: 140px;
+  flex: 1;
+  padding: 11px 13px;
+  resize: vertical;
+  border: 1px solid #d8dee8;
+  border-radius: 12px;
+  color: #18202e;
+  background: #ffffff;
+  line-height: 1.4;
+}
+
+.composer textarea:focus {
+  border-color: #275efe;
+  box-shadow: 0 0 0 3px rgb(39 94 254 / 12%);
+  outline: 0;
+}
+
+.composerRow button {
+  min-width: 112px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 11px;
+  color: #ffffff;
+  background: #275efe;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.composerRow button:disabled {
+  background: #9bb0e9;
+  cursor: not-allowed;
+}
+
+.error {
+  margin: 0 0 10px;
+  padding: 9px 12px;
+  border: 1px solid #ffd1d1;
+  border-radius: 9px;
+  color: #a72d2d;
+  background: #fff2f2;
+  font-size: 13px;
+}
+
+.keyboardHint {
+  margin-top: 6px;
+  display: block;
+  color: #8a94a5;
+  font-size: 11px;
+}
+
+@media (max-width: 520px) {
+  .messages {
+    padding: 16px;
+  }
+
+  .outgoingMessage {
+    max-width: 88%;
+  }
+
+  .composerRow button {
+    min-width: 92px;
+    padding: 0 12px;
+  }
+}

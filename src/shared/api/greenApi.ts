@@ -28,6 +28,10 @@ export interface CheckWhatsappResponse {
   fromCache?: boolean
 }
 
+interface SendMessageResponse {
+  idMessage: string
+}
+
 const REQUEST_TIMEOUT_MS = 15_000
 
 export function normalizeApiUrl(value: string) {
@@ -122,6 +126,41 @@ export async function checkWhatsapp(
   return response.data
 }
 
+export async function sendTextMessage(
+  credentials: InstanceCredentials,
+  chatId: string,
+  message: string,
+) {
+  const normalizedCredentials = normalizeCredentials(credentials)
+  const normalizedChatId = chatId.trim()
+
+  if (!normalizedChatId) {
+    throw new Error('Не указан идентификатор чата.')
+  }
+
+  if (!message.trim()) {
+    throw new Error('Введите текст сообщения.')
+  }
+
+  if (message.length > 20_000) {
+    throw new Error('Сообщение не должно превышать 20 000 символов.')
+  }
+
+  const { apiUrl, idInstance, apiTokenInstance } = normalizedCredentials
+  const requestUrl = `${apiUrl}/waInstance${encodeURIComponent(idInstance)}/sendMessage/${encodeURIComponent(apiTokenInstance)}`
+  const response = await axios.post<SendMessageResponse>(
+    requestUrl,
+    { chatId: normalizedChatId, message },
+    { timeout: REQUEST_TIMEOUT_MS },
+  )
+
+  if (typeof response.data?.idMessage !== 'string' || !response.data.idMessage) {
+    throw new Error('GREEN-API не вернул идентификатор сообщения.')
+  }
+
+  return response.data.idMessage
+}
+
 export function getConnectionErrorMessage(error: unknown) {
   if (error instanceof Error && !axios.isAxiosError(error)) {
     return error.message
@@ -160,4 +199,26 @@ export function getCheckWhatsappErrorMessage(error: unknown) {
   }
 
   return 'Не удалось проверить номер в WhatsApp. Попробуйте ещё раз.'
+}
+
+export function getSendMessageErrorMessage(error: unknown) {
+  if (error instanceof Error && !axios.isAxiosError(error)) {
+    return error.message
+  }
+
+  if (axios.isAxiosError(error)) {
+    if (!error.response) {
+      return 'Не удалось связаться с GREEN-API. Текст сохранён — попробуйте отправить снова.'
+    }
+
+    if (error.response.status === 401 || error.response.status === 403) {
+      return 'GREEN-API отклонил данные доступа. Текст сообщения сохранён.'
+    }
+
+    if (error.response.status === 429) {
+      return 'Превышен лимит запросов. Текст сохранён — повторите отправку позже.'
+    }
+  }
+
+  return 'Не удалось отправить сообщение. Текст сохранён для повторной отправки.'
 }

@@ -198,8 +198,7 @@
   font-size: 13px;
 }
 
-.instanceFooter button,
-.conversationHeader button {
+.instanceFooter button {
   padding: 7px 10px;
   border: 1px solid #d8deea;
   border-radius: 8px;
@@ -214,39 +213,6 @@
   background:
     radial-gradient(circle at 20% 20%, rgb(221 230 255 / 55%), transparent 32%),
     linear-gradient(145deg, #f7f9fc, #eef3fa);
-}
-
-.activeConversation {
-  min-height: 0;
-  display: grid;
-  grid-template-rows: auto 1fr;
-}
-
-.conversationHeader {
-  min-height: 72px;
-  padding: 14px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  border-bottom: 1px solid #e1e7f0;
-  background: rgb(255 255 255 / 82%);
-}
-
-.conversationHeader h2,
-.conversationHeader p {
-  margin: 0;
-}
-
-.conversationHeader h2 {
-  color: #1a2230;
-  font-size: 17px;
-}
-
-.conversationHeader p {
-  margin-top: 4px;
-  color: #7b8495;
-  font-size: 13px;
 }
 
 .conversationEmpty h2 {
