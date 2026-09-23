@@ -134,6 +134,10 @@
   white-space: pre-wrap;
 }
 
+.incomingMessage .messageMeta {
+  justify-content: flex-start;
+}
+
 .messageMeta {
   margin-top: 4px;
   display: flex;

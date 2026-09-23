@@ -78,9 +78,13 @@ function mergeMessages(messageGroups: ChatMessage[][]) {
 
   return [...messagesById.values()]
     .sort(
-      (left, right) =>
-        left.message.timestamp - right.message.timestamp ||
-        left.order - right.order,
+      (left, right) => {
+        const secondDifference =
+          Math.floor(left.message.timestamp / 1000) -
+          Math.floor(right.message.timestamp / 1000)
+
+        return secondDifference || left.order - right.order
+      },
     )
     .map(({ message }) => message)
 }

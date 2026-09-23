@@ -13,7 +13,7 @@ describe('contactState', () => {
             id: 'later',
             direction: 'incoming',
             text: 'Позже',
-            timestamp: 200,
+            timestamp: 2_000,
             status: 'received',
           },
         ],
@@ -27,14 +27,14 @@ describe('contactState', () => {
             id: 'earlier',
             direction: 'outgoing',
             text: 'Раньше',
-            timestamp: 100,
+            timestamp: 1_000,
             status: 'accepted',
           },
           {
             id: 'later',
             direction: 'incoming',
             text: 'Дубликат',
-            timestamp: 200,
+            timestamp: 2_000,
             status: 'received',
           },
         ],
@@ -64,6 +64,43 @@ describe('contactState', () => {
       'later',
     ])
     expect(result.chat.messages[1].text).toBe('Позже')
+  })
+
+  it('keeps insertion order when API and local timestamps are in the same second', () => {
+    const chat: Chat = {
+      chatId: '79991234567@c.us',
+      phoneNumber: '79991234567',
+      title: 'Иван',
+      messages: [
+        {
+          id: 'outgoing-message',
+          direction: 'outgoing',
+          text: 'Привет',
+          timestamp: 1_700_000_000_750,
+          status: 'accepted',
+        },
+      ],
+    }
+
+    const result = mergeContactChat([chat], {
+      chatId: '79991234567@c.us',
+      phoneNumber: '79991234567',
+      title: 'Иван',
+      messages: [
+        {
+          id: 'incoming-message',
+          direction: 'incoming',
+          text: 'Эхо: Привет',
+          timestamp: 1_700_000_000_000,
+          status: 'received',
+        },
+      ],
+    })
+
+    expect(result.chat.messages.map((message) => message.id)).toEqual([
+      'outgoing-message',
+      'incoming-message',
+    ])
   })
 
   it('does not match contacts by a partial numeric overlap', () => {
