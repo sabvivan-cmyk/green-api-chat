@@ -42,7 +42,7 @@ describe('ChatConversation', () => {
         chat={chat}
         credentials={credentials}
         onMessageAccepted={onMessageAccepted}
-        onNewChat={vi.fn()}
+        onBack={vi.fn()}
       />,
     )
     const input = screen.getByRole('textbox', { name: 'Сообщение' })
@@ -75,7 +75,7 @@ describe('ChatConversation', () => {
         chat={chat}
         credentials={credentials}
         onMessageAccepted={vi.fn()}
-        onNewChat={vi.fn()}
+        onBack={vi.fn()}
       />,
     )
     const input = screen.getByRole('textbox', { name: 'Сообщение' })

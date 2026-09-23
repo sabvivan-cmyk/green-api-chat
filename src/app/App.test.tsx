@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react'
+import { act, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import axios from 'axios'
 
@@ -56,7 +56,10 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: 'Подключиться' }))
 
     expect(
-      await screen.findByRole('heading', { name: 'Инстанс подключён' }),
+      await screen.findByRole('heading', { name: 'Начните общение' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Новый чат' }),
     ).toBeInTheDocument()
   })
 
@@ -90,7 +93,7 @@ describe('App', () => {
     await user.type(screen.getByLabelText('API-токен инстанса'), 'token')
     await user.click(screen.getByRole('button', { name: 'Подключиться' }))
     await user.click(
-      await screen.findByRole('button', { name: 'Создать чат' }),
+      await screen.findByRole('button', { name: 'Новый чат' }),
     )
     await user.type(
       screen.getByRole('textbox', { name: 'Номер телефона' }),
@@ -163,7 +166,11 @@ describe('App', () => {
     expect(
       await screen.findByRole('heading', { name: 'Иван' }),
     ).toBeInTheDocument()
-    expect(screen.getByText('Входящий ответ')).toBeInTheDocument()
+    expect(
+      within(screen.getByLabelText('Активный чат')).getByText(
+        'Входящий ответ',
+      ),
+    ).toBeInTheDocument()
     expect(mockedAxios.delete).toHaveBeenCalledWith(
       expect.stringContaining('/deleteNotification/'),
       expect.objectContaining({ timeout: 15_000 }),
@@ -215,7 +222,7 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: 'Подключиться' }))
 
     await user.click(
-      await screen.findByRole('button', { name: 'Создать чат' }),
+      await screen.findByRole('button', { name: 'Новый чат' }),
     )
     await user.type(
       screen.getByRole('textbox', { name: 'Номер телефона' }),
@@ -223,9 +230,7 @@ describe('App', () => {
     )
     await user.click(screen.getByRole('button', { name: 'Создать чат' }))
 
-    await user.click(
-      screen.getAllByRole('button', { name: 'Новый чат' })[0],
-    )
+    await user.click(screen.getByRole('button', { name: 'Новый чат' }))
     await user.type(
       screen.getByRole('textbox', { name: 'Номер телефона' }),
       '+7 888 123-45-67',
@@ -234,6 +239,17 @@ describe('App', () => {
     expect(
       await screen.findByRole('heading', { name: 'Борис' }),
     ).toBeInTheDocument()
+
+    const chatSearch = screen.getByRole('searchbox', {
+      name: 'Поиск по чатам',
+    })
+    const chatList = screen.getByRole('navigation', { name: 'Список чатов' })
+    await user.type(chatSearch, 'Анна')
+    expect(within(chatList).getByRole('button', { name: /Анна/ })).toBeVisible()
+    expect(
+      within(chatList).queryByRole('button', { name: /Борис/ }),
+    ).not.toBeInTheDocument()
+    await user.clear(chatSearch)
 
     await act(async () =>
       incomingResponse.resolve({
@@ -259,11 +275,17 @@ describe('App', () => {
     )
 
     expect(screen.getByRole('heading', { name: 'Борис' })).toBeInTheDocument()
-    expect(screen.queryByText('Ответ для неактивного чата')).not.toBeInTheDocument()
+    expect(
+      within(screen.getByLabelText('Активный чат')).queryByText(
+        'Ответ для неактивного чата',
+      ),
+    ).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: /Анна/ }))
     expect(
-      await screen.findByText('Ответ для неактивного чата'),
+      await within(screen.getByLabelText('Активный чат')).findByText(
+        'Ответ для неактивного чата',
+      ),
     ).toBeInTheDocument()
   })
 })

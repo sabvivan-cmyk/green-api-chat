@@ -68,7 +68,7 @@ function SendingHarness() {
         credentials={credentials}
         key={activeChat.chatId}
         onMessageAccepted={handleAccepted}
-        onNewChat={vi.fn()}
+        onBack={vi.fn()}
       />
     </>
   )

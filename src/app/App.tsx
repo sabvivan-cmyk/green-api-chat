@@ -14,6 +14,11 @@ import { useNotificationPolling } from '../features/notification-polling/useNoti
 import { InstanceCredentials } from '../shared/api/greenApi'
 import styles from './App.module.css'
 
+const messageTimeFormatter = new Intl.DateTimeFormat('ru', {
+  hour: '2-digit',
+  minute: '2-digit',
+})
+
 export function App() {
   const [credentials, setCredentials] = useState<InstanceCredentials | null>(
     null,
@@ -21,8 +26,19 @@ export function App() {
   const [chats, setChats] = useState<Chat[]>([])
   const [activeChatId, setActiveChatId] = useState<string | null>(null)
   const [isCreatingChat, setIsCreatingChat] = useState(false)
+  const [isMobileConversationOpen, setIsMobileConversationOpen] =
+    useState(true)
+  const [chatSearch, setChatSearch] = useState('')
 
   const activeChat = chats.find((chat) => chat.chatId === activeChatId)
+  const normalizedChatSearch = chatSearch.trim().toLocaleLowerCase('ru')
+  const visibleChats = normalizedChatSearch
+    ? chats.filter((chat) =>
+        [chat.title, chat.phoneNumber, chat.chatId].some((value) =>
+          value?.toLocaleLowerCase('ru').includes(normalizedChatSearch),
+        ),
+      )
+    : chats
 
   const handleIncomingText = useCallback(
     (notification: IncomingTextNotification) => {
@@ -39,11 +55,29 @@ export function App() {
     onIncomingText: handleIncomingText,
   })
 
+  function handleConnected(instanceCredentials: InstanceCredentials) {
+    setCredentials(instanceCredentials)
+    setIsMobileConversationOpen(false)
+  }
+
+  function openNewChat() {
+    setIsCreatingChat(true)
+    setIsMobileConversationOpen(true)
+  }
+
+  function openChat(chatId: string) {
+    setActiveChatId(chatId)
+    setIsCreatingChat(false)
+    setIsMobileConversationOpen(true)
+  }
+
   function handleDisconnect() {
     setCredentials(null)
     setChats([])
     setActiveChatId(null)
     setIsCreatingChat(false)
+    setIsMobileConversationOpen(true)
+    setChatSearch('')
   }
 
   function handleChatCreated(chat: CreatedChat) {
@@ -58,6 +92,7 @@ export function App() {
     })
     setActiveChatId(chat.chatId)
     setIsCreatingChat(false)
+    setIsMobileConversationOpen(true)
   }
 
   function handleMessageAccepted(chatId: string, message: ChatMessage) {
@@ -68,54 +103,103 @@ export function App() {
 
   return (
     <main className={styles.page}>
-      <section className={styles.chatShell} aria-label="GREEN-API chat">
+      <section
+        className={`${styles.chatShell} ${
+          isMobileConversationOpen || !credentials
+            ? styles.mobileConversationOpen
+            : ''
+        }`}
+        aria-label="GREEN-API chat"
+      >
         <aside className={styles.sidebar}>
           <header className={styles.sidebarHeader}>
-            <div>
-              <p className={styles.eyebrow}>WhatsApp · GREEN-API</p>
+            <div className={styles.brandText}>
               <h1 className={styles.title}>Чаты</h1>
+              <p className={styles.eyebrow}>WhatsApp · GREEN-API</p>
             </div>
             {credentials ? (
               <button
+                aria-label="Новый чат"
                 className={styles.newChatButton}
-                onClick={() => setIsCreatingChat(true)}
+                onClick={openNewChat}
                 type="button"
-              >
-                Новый чат
-              </button>
+              />
             ) : (
               <span className={styles.connectionStatus}>Не подключено</span>
             )}
           </header>
 
+          {credentials && (
+            <div className={styles.search}>
+              <span className={styles.searchIcon} aria-hidden="true" />
+              <label className={styles.visuallyHidden} htmlFor="chat-search">
+                Поиск по чатам
+              </label>
+              <input
+                id="chat-search"
+                onChange={(event) => setChatSearch(event.target.value)}
+                placeholder="Поиск"
+                type="search"
+                value={chatSearch}
+              />
+              {chatSearch && (
+                <button
+                  aria-label="Очистить поиск"
+                  className={styles.clearSearchButton}
+                  onClick={() => setChatSearch('')}
+                  type="button"
+                />
+              )}
+            </div>
+          )}
+
           {chats.length > 0 ? (
             <nav className={styles.chatList} aria-label="Список чатов">
-              {chats.map((chat) => (
-                <button
-                  aria-current={chat.chatId === activeChatId ? 'true' : undefined}
-                  className={styles.chatListItem}
-                  key={chat.chatId}
-                  onClick={() => {
-                    setActiveChatId(chat.chatId)
-                    setIsCreatingChat(false)
-                  }}
-                  type="button"
-                >
-                  <span className={styles.chatAvatar} aria-hidden="true">
-                    {chat.title.slice(0, 1).toUpperCase()}
-                  </span>
-                  <span className={styles.chatDetails}>
-                    <strong>{chat.title}</strong>
-                    <span>
-                      {chat.phoneNumber ? `+${chat.phoneNumber}` : chat.chatId}
+              {visibleChats.map((chat) => {
+                const lastMessage = chat.messages.at(-1)
+                const preview = lastMessage
+                  ? `${lastMessage.direction === 'outgoing' ? 'Вы: ' : ''}${lastMessage.text}`
+                  : chat.phoneNumber
+                    ? `+${chat.phoneNumber}`
+                    : chat.chatId
+
+                return (
+                  <button
+                    aria-current={
+                      chat.chatId === activeChatId ? 'true' : undefined
+                    }
+                    className={styles.chatListItem}
+                    key={chat.chatId}
+                    onClick={() => openChat(chat.chatId)}
+                    type="button"
+                  >
+                    <span className={styles.chatAvatar} aria-hidden="true">
+                      {chat.title.slice(0, 1).toUpperCase()}
                     </span>
-                  </span>
-                </button>
-              ))}
+                    <span className={styles.chatDetails}>
+                      <span className={styles.chatTitleRow}>
+                        <strong title={chat.title}>{chat.title}</strong>
+                        {lastMessage && (
+                          <time
+                            dateTime={new Date(
+                              lastMessage.timestamp,
+                            ).toISOString()}
+                          >
+                            {messageTimeFormatter.format(lastMessage.timestamp)}
+                          </time>
+                        )}
+                      </span>
+                      <span className={styles.chatPreview}>{preview}</span>
+                    </span>
+                  </button>
+                )
+              })}
+              {visibleChats.length === 0 && (
+                <p className={styles.noSearchResults}>Ничего не найдено</p>
+              )}
             </nav>
           ) : (
             <div className={styles.sidebarEmpty}>
-              <span className={styles.emptyIcon} aria-hidden="true" />
               <p className={styles.emptyTitle}>Пока нет чатов</p>
               <p className={styles.emptyText}>
                 {credentials
@@ -148,11 +232,14 @@ export function App() {
 
         <section className={styles.conversation} aria-label="Активный чат">
           {!credentials ? (
-            <InstanceConnectionForm onConnected={setCredentials} />
+            <InstanceConnectionForm onConnected={handleConnected} />
           ) : isCreatingChat ? (
             <CreateChatForm
               credentials={credentials}
-              onCancel={() => setIsCreatingChat(false)}
+              onCancel={() => {
+                setIsCreatingChat(false)
+                setIsMobileConversationOpen(false)
+              }}
               onCreated={handleChatCreated}
             />
           ) : activeChat ? (
@@ -161,22 +248,19 @@ export function App() {
               credentials={credentials}
               key={activeChat.chatId}
               onMessageAccepted={handleMessageAccepted}
-              onNewChat={() => setIsCreatingChat(true)}
+              onBack={() => setIsMobileConversationOpen(false)}
             />
           ) : (
             <div className={styles.conversationEmpty}>
-              <div className={styles.logoMark} aria-hidden="true">
+              <span className={styles.emptyConversationIcon} aria-hidden="true">
                 G
-              </div>
-              <h2>Инстанс подключён</h2>
-              <p>Создайте чат, чтобы начать переписку.</p>
-              <button
-                className={styles.primaryButton}
-                onClick={() => setIsCreatingChat(true)}
-                type="button"
-              >
-                Создать чат
-              </button>
+              </span>
+              <h2>{chats.length > 0 ? 'Выберите чат' : 'Начните общение'}</h2>
+              <p>
+                {chats.length > 0
+                  ? 'Выберите диалог в списке слева.'
+                  : 'Создайте первый чат кнопкой в левой панели.'}
+              </p>
             </div>
           )}
         </section>
