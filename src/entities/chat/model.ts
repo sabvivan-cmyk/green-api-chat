@@ -8,7 +8,7 @@ export interface ChatMessage {
 
 export interface Chat {
   chatId: string
-  phoneNumber: string
+  phoneNumber: string | null
   title: string
   messages: ChatMessage[]
 }

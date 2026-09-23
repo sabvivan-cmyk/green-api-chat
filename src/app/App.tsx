@@ -1,12 +1,16 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 
 import { Chat, ChatMessage } from '../entities/chat/model'
+import { appendMessageToChat } from '../entities/chat/messageState'
 import {
   CreatedChat,
   CreateChatForm,
 } from '../features/chat-creation/CreateChatForm'
 import { InstanceConnectionForm } from '../features/instance-connection/InstanceConnectionForm'
 import { ChatConversation } from '../features/message-sending/ChatConversation'
+import { mergeIncomingText } from '../features/notification-polling/mergeIncomingText'
+import { IncomingTextNotification } from '../features/notification-polling/notificationParser'
+import { useNotificationPolling } from '../features/notification-polling/useNotificationPolling'
 import { InstanceCredentials } from '../shared/api/greenApi'
 import styles from './App.module.css'
 
@@ -19,6 +23,21 @@ export function App() {
   const [isCreatingChat, setIsCreatingChat] = useState(false)
 
   const activeChat = chats.find((chat) => chat.chatId === activeChatId)
+
+  const handleIncomingText = useCallback(
+    (notification: IncomingTextNotification) => {
+      setChats((currentChats) =>
+        mergeIncomingText(currentChats, notification),
+      )
+      setActiveChatId((currentChatId) => currentChatId ?? notification.chatId)
+    },
+    [],
+  )
+
+  const { error: pollingError } = useNotificationPolling({
+    credentials,
+    onIncomingText: handleIncomingText,
+  })
 
   function handleDisconnect() {
     setCredentials(null)
@@ -43,19 +62,7 @@ export function App() {
 
   function handleMessageAccepted(chatId: string, message: ChatMessage) {
     setChats((currentChats) =>
-      currentChats.map((chat) => {
-        if (chat.chatId !== chatId) {
-          return chat
-        }
-
-        const messageAlreadyExists = chat.messages.some(
-          (currentMessage) => currentMessage.id === message.id,
-        )
-
-        return messageAlreadyExists
-          ? chat
-          : { ...chat, messages: [...chat.messages, message] }
-      }),
+      appendMessageToChat(currentChats, chatId, message),
     )
   }
 
@@ -99,7 +106,9 @@ export function App() {
                   </span>
                   <span className={styles.chatDetails}>
                     <strong>{chat.title}</strong>
-                    <span>+{chat.phoneNumber}</span>
+                    <span>
+                      {chat.phoneNumber ? `+${chat.phoneNumber}` : chat.chatId}
+                    </span>
                   </span>
                 </button>
               ))}
@@ -118,7 +127,18 @@ export function App() {
 
           {credentials && (
             <footer className={styles.instanceFooter}>
-              <span>Инстанс {credentials.idInstance}</span>
+              <span>
+                Инстанс {credentials.idInstance}
+                {pollingError && (
+                  <small
+                    className={styles.pollingError}
+                    role="status"
+                    title={pollingError}
+                  >
+                    Ошибка получения — повторяем
+                  </small>
+                )}
+              </span>
               <button onClick={handleDisconnect} type="button">
                 Сменить
               </button>

@@ -49,24 +49,36 @@
   overflow-y: auto;
 }
 
-.outgoingMessage {
+.outgoingMessage,
+.incomingMessage {
   max-width: min(72%, 560px);
-  margin-left: auto;
   padding: 10px 13px 7px;
-  border-radius: 16px 16px 4px;
   color: #172033;
-  background: #dfe8ff;
   box-shadow: 0 5px 15px rgb(51 78 139 / 8%);
 }
 
-.outgoingMessage p {
+.outgoingMessage {
+  margin-left: auto;
+  border-radius: 16px 16px 4px;
+  background: #dfe8ff;
+}
+
+.incomingMessage {
+  margin-right: auto;
+  border-radius: 16px 16px 16px 4px;
+  background: #ffffff;
+}
+
+.outgoingMessage p,
+.incomingMessage p {
   margin: 0;
   line-height: 1.45;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
 
-.outgoingMessage span {
+.outgoingMessage span,
+.incomingMessage span {
   margin-top: 4px;
   display: block;
   color: #667594;

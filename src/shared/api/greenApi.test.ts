@@ -2,9 +2,11 @@ import axios from 'axios'
 
 import {
   checkWhatsapp,
+  deleteNotification,
   getStateInstance,
   normalizeApiUrl,
   normalizeCredentials,
+  receiveNotification,
   sendTextMessage,
 } from './greenApi'
 
@@ -12,6 +14,7 @@ vi.mock('axios', () => ({
   default: {
     get: vi.fn(),
     post: vi.fn(),
+    delete: vi.fn(),
     isAxiosError: vi.fn(() => false),
   },
 }))
@@ -86,7 +89,7 @@ describe('GREEN-API client', () => {
 
     expect(mockedAxios.post).toHaveBeenCalledWith(
       'https://7103.api.green-api.com/waInstance1101000001/checkWhatsapp/secret-token',
-      { chatId: '79991234567' },
+      { chatId: '79991234567@c.us' },
       { timeout: 15_000 },
     )
   })
@@ -112,6 +115,40 @@ describe('GREEN-API client', () => {
       'https://7103.api.green-api.com/waInstance1101000001/sendMessage/secret-token',
       { chatId: '123456789012345@lid', message: 'Привет!' },
       { timeout: 15_000 },
+    )
+  })
+
+  it('receives and deletes a notification with the documented endpoints', async () => {
+    const notification = {
+      receiptId: 1234567,
+      body: { typeWebhook: 'stateInstanceChanged' },
+    }
+    mockedAxios.get.mockResolvedValueOnce({ data: notification })
+    mockedAxios.delete.mockResolvedValueOnce({ data: { result: true } })
+    const credentials = {
+      apiUrl: 'https://7103.api.greenapi.com',
+      idInstance: '1101000001',
+      apiTokenInstance: 'secret-token',
+    }
+
+    await expect(receiveNotification(credentials)).resolves.toEqual(
+      notification,
+    )
+    await expect(
+      deleteNotification(credentials, notification.receiptId),
+    ).resolves.toBeUndefined()
+
+    expect(mockedAxios.get).toHaveBeenCalledWith(
+      'https://7103.api.greenapi.com/waInstance1101000001/receiveNotification/secret-token',
+      {
+        params: { receiveTimeout: 5 },
+        signal: undefined,
+        timeout: 10_000,
+      },
+    )
+    expect(mockedAxios.delete).toHaveBeenCalledWith(
+      'https://7103.api.greenapi.com/waInstance1101000001/deleteNotification/secret-token/1234567',
+      { signal: undefined, timeout: 15_000 },
     )
   })
 })

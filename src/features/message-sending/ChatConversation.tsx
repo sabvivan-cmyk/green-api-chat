@@ -76,7 +76,7 @@ export function ChatConversation({
       <header className={styles.header}>
         <div>
           <h2>{chat.title}</h2>
-          <p>+{chat.phoneNumber}</p>
+          <p>{chat.phoneNumber ? `+${chat.phoneNumber}` : chat.chatId}</p>
         </div>
         <button onClick={onNewChat} type="button">
           Новый чат
@@ -87,7 +87,11 @@ export function ChatConversation({
         {chat.messages.length > 0 ? (
           chat.messages.map((message) => (
             <article
-              className={styles.outgoingMessage}
+              className={
+                message.direction === 'outgoing'
+                  ? styles.outgoingMessage
+                  : styles.incomingMessage
+              }
               data-message-id={message.id}
               key={message.id}
             >

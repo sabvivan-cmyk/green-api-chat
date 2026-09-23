@@ -32,6 +32,26 @@ interface SendMessageResponse {
   idMessage: string
 }
 
+export interface NotificationEnvelope {
+  receiptId: number
+  body: unknown
+}
+
+interface DeleteNotificationResponse {
+  result: boolean
+}
+
+interface NotificationErrorResponse {
+  status: 'error'
+  message?: string
+}
+
+function isNotificationErrorResponse(
+  value: NotificationEnvelope | NotificationErrorResponse,
+): value is NotificationErrorResponse {
+  return 'status' in value && value.status === 'error'
+}
+
 const REQUEST_TIMEOUT_MS = 15_000
 
 export function normalizeApiUrl(value: string) {
@@ -112,7 +132,7 @@ export async function checkWhatsapp(
 
   const response = await axios.post<CheckWhatsappResponse>(
     requestUrl,
-    { chatId: phoneNumber },
+    { chatId: `${phoneNumber}@c.us` },
     { timeout: REQUEST_TIMEOUT_MS },
   )
 
@@ -159,6 +179,62 @@ export async function sendTextMessage(
   }
 
   return response.data.idMessage
+}
+
+export async function receiveNotification(
+  credentials: InstanceCredentials,
+  signal?: AbortSignal,
+): Promise<NotificationEnvelope | null> {
+  const normalizedCredentials = normalizeCredentials(credentials)
+  const { apiUrl, idInstance, apiTokenInstance } = normalizedCredentials
+  const requestUrl = `${apiUrl}/waInstance${encodeURIComponent(idInstance)}/receiveNotification/${encodeURIComponent(apiTokenInstance)}`
+  const response = await axios.get<
+    NotificationEnvelope | NotificationErrorResponse | null
+  >(requestUrl, {
+    params: { receiveTimeout: 5 },
+    signal,
+    timeout: 10_000,
+  })
+
+  if (response.data === null) {
+    return null
+  }
+
+  if (isNotificationErrorResponse(response.data)) {
+    throw new Error(
+      response.data.message ||
+        'GREEN-API вернул ошибку при получении уведомлений.',
+    )
+  }
+
+  if (
+    !Number.isInteger(response.data?.receiptId) ||
+    !response.data ||
+    typeof response.data.body !== 'object' ||
+    response.data.body === null
+  ) {
+    throw new Error('GREEN-API вернул некорректное уведомление.')
+  }
+
+  return response.data
+}
+
+export async function deleteNotification(
+  credentials: InstanceCredentials,
+  receiptId: number,
+  signal?: AbortSignal,
+) {
+  const normalizedCredentials = normalizeCredentials(credentials)
+  const { apiUrl, idInstance, apiTokenInstance } = normalizedCredentials
+  const requestUrl = `${apiUrl}/waInstance${encodeURIComponent(idInstance)}/deleteNotification/${encodeURIComponent(apiTokenInstance)}/${receiptId}`
+  const response = await axios.delete<DeleteNotificationResponse>(requestUrl, {
+    signal,
+    timeout: REQUEST_TIMEOUT_MS,
+  })
+
+  if (response.data?.result !== true) {
+    throw new Error('GREEN-API не подтвердил удаление уведомления.')
+  }
 }
 
 export function getConnectionErrorMessage(error: unknown) {
