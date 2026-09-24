@@ -1,11 +1,13 @@
 import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from 'react'
 
 import { Chat, ChatMessage } from '../../entities/chat/model'
+import { getChatAvatarInitial } from '../../entities/chat/avatar'
 import {
   getSendMessageErrorMessage,
   InstanceCredentials,
   sendTextMessage,
 } from '../../shared/api/greenApi'
+import userIcon from '../../shared/assets/user.svg'
 import styles from './ChatConversation.module.css'
 
 interface ChatConversationProps {
@@ -32,6 +34,7 @@ export function ChatConversation({
   )
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const messagesRef = useRef<HTMLDivElement>(null)
+  const avatarInitial = getChatAvatarInitial(chat)
 
   useEffect(() => {
     const messagesElement = messagesRef.current
@@ -103,8 +106,13 @@ export function ChatConversation({
         >
           <span aria-hidden="true">←</span>
         </button>
-        <span className={styles.headerAvatar} aria-hidden="true">
-          {chat.title.slice(0, 1).toUpperCase()}
+        <span
+          className={`${styles.headerAvatar} ${
+            avatarInitial ? '' : styles.defaultAvatar
+          }`}
+          aria-hidden="true"
+        >
+          {avatarInitial ?? <img alt="" src={userIcon} />}
         </span>
         <div className={styles.contactInfo}>
           <h2 title={chat.title}>{chat.title}</h2>
@@ -141,7 +149,7 @@ export function ChatConversation({
         ) : (
           <div className={styles.emptyMessages}>
             <strong>Сообщений пока нет</strong>
-            <span>Напишите первое текстовое сообщение.</span>
+            <span>Напишите первое текстовое сообщение</span>
           </div>
         )}
       </div>

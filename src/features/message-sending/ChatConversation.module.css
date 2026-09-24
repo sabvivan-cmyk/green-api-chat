@@ -39,6 +39,7 @@
 }
 
 .headerAvatar {
+  position: relative;
   width: 44px;
   height: 44px;
   flex: 0 0 auto;
@@ -52,6 +53,13 @@
   box-shadow: 0 6px 16px rgb(104 66 225 / 24%);
   font-size: 16px;
   font-weight: 700;
+  line-height: 1;
+}
+
+.defaultAvatar img {
+  width: 20px;
+  height: 20px;
+  display: block;
 }
 
 .contactInfo {

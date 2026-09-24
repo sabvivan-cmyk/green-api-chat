@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 
 import { Chat, ChatMessage } from '../entities/chat/model'
+import { getChatAvatarInitial } from '../entities/chat/avatar'
 import { mergeContactChat } from '../entities/chat/contactState'
 import { appendMessageToChat } from '../entities/chat/messageState'
 import {
@@ -13,6 +14,7 @@ import { mergeIncomingText } from '../features/notification-polling/mergeIncomin
 import { IncomingTextNotification } from '../features/notification-polling/notificationParser'
 import { useNotificationPolling } from '../features/notification-polling/useNotificationPolling'
 import { InstanceCredentials } from '../shared/api/greenApi'
+import userIcon from '../shared/assets/user.svg'
 import styles from './App.module.css'
 
 const messageTimeFormatter = new Intl.DateTimeFormat('ru', {
@@ -177,6 +179,7 @@ export function App() {
             <nav className={styles.chatList} aria-label="Список чатов">
               {visibleChats.map((chat) => {
                 const lastMessage = chat.messages.at(-1)
+                const avatarInitial = getChatAvatarInitial(chat)
                 const preview = lastMessage
                   ? `${lastMessage.direction === 'outgoing' ? 'Вы: ' : ''}${lastMessage.text}`
                   : chat.phoneNumber
@@ -193,8 +196,15 @@ export function App() {
                     onClick={() => openChat(chat.chatId)}
                     type="button"
                   >
-                    <span className={styles.chatAvatar} aria-hidden="true">
-                      {chat.title.slice(0, 1).toUpperCase()}
+                    <span
+                      className={`${styles.chatAvatar} ${
+                        avatarInitial ? '' : styles.defaultAvatar
+                      }`}
+                      aria-hidden="true"
+                    >
+                      {avatarInitial ?? (
+                        <img alt="" src={userIcon} />
+                      )}
                     </span>
                     <span className={styles.chatDetails}>
                       <span className={styles.chatTitleRow}>

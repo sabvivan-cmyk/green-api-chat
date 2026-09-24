@@ -288,6 +288,7 @@
 }
 
 .chatAvatar {
+  position: relative;
   width: 48px;
   height: 48px;
   flex: 0 0 auto;
@@ -302,6 +303,12 @@
   font-size: 16px;
   font-weight: 700;
   line-height: 1;
+}
+
+.defaultAvatar img {
+  width: 18px;
+  height: 18px;
+  display: block;
 }
 
 .chatDetails {
