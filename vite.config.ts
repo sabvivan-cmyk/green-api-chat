@@ -1,7 +1,8 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vitest/config'
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
+  base: command === 'build' ? '/green-api-chat/' : '/',
   plugins: [react()],
   server: {
     host: '127.0.0.1',
@@ -11,4 +12,4 @@ export default defineConfig({
     globals: true,
     setupFiles: './src/test/setup.ts',
   },
-})
+}))
